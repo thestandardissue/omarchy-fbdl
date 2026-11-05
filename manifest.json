@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "id": "io.github.thestandardissue.fbdl",
+  "name": "Reel & Video Downloader for Facebook",
+  "version": "1.0.0",
+  "author": "thestandardissue",
+  "license": "MIT",
+  "homepage": "https://github.com/thestandardissue/omarchy-fbdl",
+  "description": "One-click download of a Facebook reel or video link from your clipboard, using yt-dlp. Facebook only; stories are not supported.",
+  "kinds": [
+    "bar-widget"
+  ],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Reel & Video Downloader for Facebook",
+    "description": "Click to download the Facebook reel or video link in your clipboard. Stories are not supported.",
+    "category": "Media",
+    "allowMultiple": false,
+    "defaultSection": "right",
+    "schema": [
+      {
+        "key": "downloadLocation",
+        "type": "path",
+        "label": "Download folder",
+        "description": "Where videos are saved.",
+        "defaultValue": "~/Downloads/facebook"
+      },
+      {
+        "key": "cookiesBrowser",
+        "type": "enum",
+        "label": "Use cookies from browser",
+        "description": "Needed for private or friends-only videos. Reads your login cookies from this browser.",
+        "options": ["none", "firefox", "chromium", "chrome", "brave", "vivaldi", "edge", "opera"],
+        "defaultValue": "none"
+      }
+    ]
+  }
+}

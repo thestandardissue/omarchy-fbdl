@@ -1,0 +1,59 @@
+#!/bin/bash
+# fbdl - download a Facebook video/reel with yt-dlp.
+# Usage: fbdl [url] [output-dir] [cookies-browser]
+#   url             defaults to the clipboard
+#   output-dir      defaults to ~/Downloads/facebook
+#   cookies-browser e.g. firefox, chromium; "none" or empty to skip
+
+URL="${1:-$(wl-paste --no-newline 2>/dev/null)}"
+OUT="${2:-$HOME/Downloads/facebook}"
+BROWSER="${3:-none}"
+case "$OUT" in "~/"*) OUT="$HOME/${OUT#\~/}" ;; esac
+
+URL="$(printf '%s' "$URL" | tr -d '[:space:]')"
+
+if ! printf '%s' "$URL" | grep -Eq '^https?://([a-z0-9-]+\.)?(facebook\.com|fb\.watch|fb\.com)/'; then
+  notify-send -u low "Facebook download" "No Facebook video link found in the clipboard"
+  exit 1
+fi
+
+# yt-dlp has no support for Facebook stories, so say so instead of a vague error.
+case "$URL" in */stories/*)
+  notify-send -u normal "Facebook download" "Stories can't be downloaded (yt-dlp doesn't support them). Videos and reels work."
+  exit 1 ;;
+esac
+
+command -v yt-dlp >/dev/null || { notify-send -u critical "Facebook download" "yt-dlp is not installed"; exit 1; }
+
+COOKIES=()
+[ -n "$BROWSER" ] && [ "$BROWSER" != "none" ] && COOKIES=(--cookies-from-browser "$BROWSER")
+
+mkdir -p "$OUT"
+notify-send -u low "Facebook download" "Starting download…"
+
+LOG="$(mktemp)"
+PID=""
+
+# On cancel, stop yt-dlp as well, not just this script.
+cancel() {
+  [ -n "$PID" ] && kill "$PID" 2>/dev/null && wait "$PID" 2>/dev/null
+  notify-send -u low "Facebook download" "Cancelled"
+  exit 130
+}
+trap cancel TERM INT
+trap 'rm -f "$LOG"' EXIT
+
+yt-dlp --no-playlist --merge-output-format mp4 \
+  -f 'bv*+ba/b' "${COOKIES[@]}" \
+  -o "$OUT/%(uploader,uploader_id,id)s - %(title).80B [%(id)s].%(ext)s" \
+  --print after_move:filepath "$URL" >"$LOG" 2>&1 &
+PID=$!
+
+if wait "$PID"; then
+  FILE="$(tail -n1 "$LOG")"
+  notify-send "Facebook download complete" "$(basename "$FILE")"
+else
+  ERR="$(grep -i 'error' "$LOG" | tail -n1)"
+  notify-send -u critical "Facebook download failed" "${ERR:-See yt-dlp output}. Private videos need the cookies setting."
+  exit 1
+fi

@@ -2,6 +2,8 @@
 
 A bar button for Omarchy: copy a Facebook **reel or video** link, click the button, and the video is saved as an MP4. It uses [yt-dlp](https://github.com/yt-dlp/yt-dlp) for the download.
 
+![Preview](preview.png)
+
 Not affiliated with or endorsed by Meta or Facebook. Only download videos you have the right to save.
 
 ## Install
